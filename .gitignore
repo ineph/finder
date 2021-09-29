@@ -1,0 +1,11 @@
+# Python
+.Python
+.idea
+.code
+
+# Environment
+.env
+.venv
+env/
+venv/
+ENV/
