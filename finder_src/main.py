@@ -15,7 +15,7 @@ def finder():
     for arquivo in os.listdir(pasta_alvo):
         arquivo_nome, arquivo_extensao = os.path.splitext(arquivo)
 
-        # TODO: navegar para pastas filhas e procurar mais arquivos recursamente
+        # TODO: navegar para pastas filhas e procurar mais arquivos recursivamente
         if arquivo_extensao in imagens_extensoes:
             imagem = Image.open(f"{pasta_alvo}/{arquivo}")
             exif_arquivo = imagem._getexif()
