@@ -47,7 +47,6 @@ def arquivo_criador(pasta_destino, pasta_alvo, pasta_nome, arquivo):
     if not os.path.exists(f"{pasta_destino}/{pasta_nome}"):
         os.makedirs(f"{pasta_destino}/{pasta_nome}")
     shutil.copy2(f"{pasta_alvo}/{arquivo}", f"{pasta_destino}/{pasta_nome}/{arquivo}")
-# testando
 
 if __name__ == '__main__':
     # TODO: organizar estrutura e separar em arquivos (sem overengineering, caralho)
