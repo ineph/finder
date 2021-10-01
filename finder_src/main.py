@@ -18,17 +18,31 @@ def finder():
         if arquivo_extensao in imagens_extensoes:
             imagem = Image.open(f"{pasta_alvo}/{arquivo}")
             exif_arquivo = imagem._getexif()
-            if exif_arquivo:
+            imagem_tamanho = imagem._size
 
+            if exif_arquivo:
                 for tag, value in exif_arquivo.items():
                     if tag in TAGS:
                         exif[TAGS[tag]] = value
 
                 if exif["Model"] == 'GT-M2520':
-                    shutil.copy2(f"{pasta_alvo}/{arquivo}", f"{pasta_destino}/{arquivo}-GT-M2520")
+                    arquivo_criador(pasta_destino, pasta_alvo, 'GT-M2520', arquivo)
 
-                elif exif["Model"] == 'DSC-P200':
-                    shutil.copy2(f"{pasta_alvo}/{arquivo}", f"{pasta_destino}/{arquivo}-DSC-P200")
+                if exif["Model"] == 'DSC-P200':
+                    arquivo_criador(pasta_destino, pasta_alvo, 'DSC-P200', arquivo)
+
+            else:
+                if imagem_tamanho[0] == 800 and imagem_tamanho[1] == 600:
+                    arquivo_criador(pasta_destino, pasta_alvo, '800x600', arquivo)
+
+                if imagem_tamanho[1] == 800 and imagem_tamanho[0] == 600:
+                    arquivo_criador(pasta_destino, pasta_alvo, '600x800', arquivo)
+
+
+def arquivo_criador(pasta_destino, pasta_alvo, pasta_nome, arquivo):
+    if not os.path.exists(f"{pasta_destino}/{pasta_nome}"):
+        os.makedirs(f"{pasta_destino}/{pasta_nome}")
+    shutil.copy2(f"{pasta_alvo}/{arquivo}", f"{pasta_destino}/{pasta_nome}/{arquivo}")
 
 if __name__ == '__main__':
     finder()
