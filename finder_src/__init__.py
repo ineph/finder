@@ -1,3 +1,0 @@
-from finder_src.configurations.environment_variables import environments_variables_dict
-
-vars = environments_variables_dict()
