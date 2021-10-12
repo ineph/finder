@@ -9,47 +9,69 @@ def finder():
     exif = {}
     # TODO: adicionar mais extensões (imagens, videos, musicas, texto simples)
     imagens_extensoes = ['.jpg', '.png', '.jpeg']
-    pasta_alvo = env.INPUT_PATH
-    pasta_destino = env.OUTPUT_PATH
+    textos = ['.xml']
+    videos = ['.rm', '.mpg', '.mpeg', '.mp3']
+    pasta_input = env.INPUT_PATH
+    pasta_output = env.OUTPUT_PATH
 
-    for arquivo in os.listdir(pasta_alvo):
-        arquivo_nome, arquivo_extensao = os.path.splitext(arquivo)
+    for pasta, subpastas, arquivos in os.walk(pasta_input):
 
-        # TODO: navegar para pastas filhas e procurar mais arquivos recursivamente
-        if arquivo_extensao in imagens_extensoes:
-            imagem = Image.open(f"{pasta_alvo}/{arquivo}")
-            exif_arquivo = imagem._getexif()
-            imagem_tamanho = imagem._size
+        for subpasta in subpastas:
+            joim = os.path.join(pasta_input, subpasta)
 
-            if exif_arquivo:
-                for tag, value in exif_arquivo.items():
-                    if tag in TAGS:
-                        exif[TAGS[tag]] = value
-                # TODO: adicionar parâmetros dinâmicos (modelos de cameras e tamanhos)
-                if exif["Model"] == 'GT-M2520':
-                    arquivo_criador(pasta_destino, pasta_alvo, 'GT-M2520', arquivo)
+            if not os.path.isfile(joim):
+                for arquivo in os.listdir(joim):
 
-                if exif["Model"] == 'DSC-P200':
-                    arquivo_criador(pasta_destino, pasta_alvo, 'DSC-P200', arquivo)
+                    pasta_atual = os.path.join(pasta_input, pasta, subpasta)
+                    arquivo_nome, arquivo_extensao = os.path.splitext(arquivo)
 
-            else:
-                if imagem_tamanho[0] == 800 and imagem_tamanho[1] == 600:
-                    arquivo_criador(pasta_destino, pasta_alvo, '800x600', arquivo)
+                    if arquivo_extensao in imagens_extensoes:
+                        arquivo_exif = exif_construtor(os.path.join(pasta_atual, arquivo))
 
-                if imagem_tamanho[1] == 800 and imagem_tamanho[0] == 600:
-                    arquivo_criador(pasta_destino, pasta_alvo, '600x800', arquivo)
+                        if arquivo_exif[1]:
+                            if arquivo_exif[1]["Model"] == 'GT-M2520':
+                                arquivo_criador(pasta_output, pasta_atual, 'GT-M2520(cel_samsung)', arquivo)
 
-                if imagem_tamanho[0] == 1024 and imagem_tamanho[1] == 768:
-                    arquivo_criador(pasta_destino, pasta_alvo, '1024x768', arquivo)
+                            if arquivo_exif[1]["Model"] == 'DSC-P200':
+                                arquivo_criador(pasta_output, pasta_atual, 'DSC-P200(flavio)', arquivo)
+
+                            if arquivo_exif[1]["Model"] == 'DSC-W110':
+                                arquivo_criador(pasta_output, pasta_atual, 'DSC-W110(camera_quebrada)', arquivo)
+
+                            if arquivo_exif[1]["Model"] == 'C261':
+                                arquivo_criador(pasta_output, pasta_atual, 'C261(cel_motorola)', arquivo)
+                        else:
+                            if arquivo_exif[0][0] == 800 and arquivo_exif[0][1] == 600:
+                                arquivo_criador(pasta_output, pasta_atual, '800x600', arquivo)
+
+                            if arquivo_exif[0][1] == 800 and arquivo_exif[0][0] == 600:
+                                arquivo_criador(pasta_output, pasta_atual, '600x800', arquivo)
+
+                            if arquivo_exif[0][0] == 1024 and arquivo_exif[0][1] == 768:
+                                arquivo_criador(pasta_output, pasta_atual, '1024x768', arquivo)
 
 
-def arquivo_criador(pasta_destino, pasta_alvo, pasta_nome, arquivo):
-    if not os.path.exists(f"{pasta_destino}/{pasta_nome}"):
-        os.makedirs(f"{pasta_destino}/{pasta_nome}")
-    shutil.copy2(f"{pasta_alvo}/{arquivo}", f"{pasta_destino}/{pasta_nome}/{arquivo}")
+def arquivo_criador(pasta_output, pasta_input, pasta_nome, arquivo):
+    if not os.path.exists(os.path.join(pasta_output, pasta_nome)):
+        os.makedirs(os.path.join(pasta_output, pasta_nome))
+    shutil.copy2(os.path.join(pasta_input, arquivo), os.path.join(pasta_output, pasta_nome, arquivo))
+
+
+def exif_construtor(caminho_arquivo):
+    exif = {}
+    imagem = Image.open(f"{caminho_arquivo}")
+    exif_arquivo = imagem._getexif()
+    imagem_tamanho = imagem._size
+
+    if exif_arquivo:
+        for tag, value in exif_arquivo.items():
+            if tag in TAGS:
+                exif[TAGS[tag]] = value
+
+    return imagem_tamanho, exif
+
 
 if __name__ == '__main__':
-    # TODO: organizar estrutura e separar em arquivos (sem overengineering, caralho)
     finder()
 
 
