@@ -1,15 +1,16 @@
 import os
 import shutil
 from finder_src import config as env
-from PIL import Image, ExifTags
 
+from finder_src.models.imagem_model import ImagemModel
 
-# TODO: organizar essa merda
+# TODO: adicionar mais extensões (imagens, videos, musicas, texto simples)
+# TODO: depois, adicionar extensões como parâmetros em console
 imagens_extensoes = ['.jpg', '.png', '.jpeg']
 resolucoes = [
     (800, 600),
     (600, 800),
-    (1024,768)
+    (1024, 768)
 ]
 modelos = [
     'GT-M2520',
@@ -21,6 +22,7 @@ excecoes = ['f0019952.jpg', 'f0005568.jpg', 'f0020288.jpg']
 
 
 def mergulhador(caminho):
+    contador = 0
     for raiz, pastas, arquivos in os.walk(caminho):
         if pastas:
             for pasta in pastas:
@@ -29,63 +31,47 @@ def mergulhador(caminho):
             for arquivo in arquivos:
                 arquivo_nome, arquivo_extensao = os.path.splitext(arquivo)
                 if arquivo_extensao in imagens_extensoes:
-                    arquivo_minuciado = exif_extrator(os.path.join(caminho, arquivo))
-                    arquivo_validador(arquivo_minuciado)
+                    # TODO: remover esse contador tosco depois de resolver o problema do último loop
+                    contador += 1
+                    if contador == 80:
+                        print('s')
+                    imagem = ImagemModel(os.path.join(caminho, arquivo), arquivo_nome, arquivo_extensao)
+                    if imagem_validador(imagem):
+                        print(contador)
+    return True
 
 
-def arquivo_validador(arquivo):
-    # TODO: passar parametros de arquivo, e imagem como classe
-    if arquivo[0] in resolucoes or arquivo[1].get('Model') in modelos or os.path.split(arquivo[2])[1] in excecoes:
+def imagem_validador(arquivo: ImagemModel):
+    if arquivo.dimensoes in resolucoes or arquivo.exif.get('Model') in modelos or arquivo.nome_completo in excecoes:
         with open('output_arquivos.txt', 'a') as f:
-            print(f'{arquivo[2]}', file=f)
+            print(arquivo.nome_completo, file=f)
         # TODO: previnir erros de exif quando imagem coletada por dimensões
-        arquivo_criador(
+        return arquivo_criador(
             env.OUTPUT_PATH,
-            os.path.split(arquivo[2])[0],
-            arquivo[1].get('Model') if arquivo[1] else f"{arquivo[0][0]}x{arquivo[0][1]}",
-            os.path.split(arquivo[2])[1]
+            os.path.split(arquivo.caminho)[0],
+            arquivo.exif.get('Model') if arquivo.exif.get('Model') else f'{arquivo.dimensoes[0]}x{arquivo.dimensoes[1]}',
+            arquivo.nome_completo
         )
 
 
+# TODO: migrar esta lógica para classe de arquivo
 def arquivo_criador(pasta_output, pasta_input, pasta_nome, nm_arquivo):
-    if not os.path.exists(os.path.join(pasta_output, pasta_nome)):
-        os.makedirs(os.path.join(pasta_output, pasta_nome))
+    try:
+        if not os.path.exists(os.path.join(pasta_output, pasta_nome)):
+            os.makedirs(os.path.join(pasta_output, pasta_nome))
 
-    shutil.copy2(os.path.join(pasta_input, nm_arquivo), os.path.join(pasta_output, pasta_nome, nm_arquivo))
+        shutil.copy2(os.path.join(pasta_input, nm_arquivo), os.path.join(pasta_output, pasta_nome, nm_arquivo))
+        return True
+    except Exception as e:
+        print(e)
 
 
 def finder():
-    # TODO: limpar lixos
-    exif = {}
     # TODO: adicionar mais extensões (imagens, videos, musicas, texto simples)
-    imagens_extensoes = ['.jpg', '.png', '.jpeg']
-    textos = ['.xml']
-    videos = ['.rm', '.mpg', '.mpeg', '.mp3']
     input_pasta = env.INPUT_PATH
-    output_pasta = env.OUTPUT_PATH
 
     mergulhador(input_pasta)
 
 
-def exif_extrator(caminho_arquivo):
-    exif = {}
-    imagem = Image.open(f"{caminho_arquivo}")
-    exif_arquivo = imagem._getexif()
-    imagem_tamanho = imagem._size
-
-    if exif_arquivo:
-        for tag, valor in exif_arquivo.items():
-            if tag in ExifTags.TAGS:
-                nm_tag = ExifTags.TAGS[tag]
-                exif[nm_tag] = valor
-
-    if os.path.split(caminho_arquivo)[1] in excecoes:
-        print('alo alo é esse a')
-
-    return imagem_tamanho, exif, caminho_arquivo
-
-
 if __name__ == '__main__':
     finder()
-
-
