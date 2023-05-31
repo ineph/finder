@@ -17,6 +17,7 @@ modelos = [
     'DSC-W110',
     'C261'
 ]
+excecoes = ['f0019952.jpg', 'f0005568.jpg', 'f0020288.jpg']
 
 
 def mergulhador(caminho):
@@ -34,15 +35,23 @@ def mergulhador(caminho):
 
 def arquivo_validador(arquivo):
     # TODO: passar parametros de arquivo, e imagem como classe
-    if arquivo[0] in resolucoes or arquivo[1].get('Model') in modelos:
+    if arquivo[0] in resolucoes or arquivo[1].get('Model') in modelos or os.path.split(arquivo[2])[1] in excecoes:
         with open('output_arquivos.txt', 'a') as f:
             print(f'{arquivo[2]}', file=f)
         # TODO: previnir erros de exif quando imagem coletada por dimensões
         arquivo_criador(
             env.OUTPUT_PATH,
             os.path.split(arquivo[2])[0],
-            arquivo[1].get('Model'), os.path.split(arquivo[2])[1]
+            arquivo[1].get('Model') if arquivo[1] else f"{arquivo[0][0]}x{arquivo[0][1]}",
+            os.path.split(arquivo[2])[1]
         )
+
+
+def arquivo_criador(pasta_output, pasta_input, pasta_nome, nm_arquivo):
+    if not os.path.exists(os.path.join(pasta_output, pasta_nome)):
+        os.makedirs(os.path.join(pasta_output, pasta_nome))
+
+    shutil.copy2(os.path.join(pasta_input, nm_arquivo), os.path.join(pasta_output, pasta_nome, nm_arquivo))
 
 
 def finder():
@@ -58,12 +67,6 @@ def finder():
     mergulhador(input_pasta)
 
 
-def arquivo_criador(pasta_output, pasta_input, pasta_nome, nm_arquivo):
-    if not os.path.exists(os.path.join(pasta_output, pasta_nome)):
-        os.makedirs(os.path.join(pasta_output, pasta_nome))
-    shutil.copy2(os.path.join(pasta_input, nm_arquivo), os.path.join(pasta_output, pasta_nome, nm_arquivo))
-
-
 def exif_extrator(caminho_arquivo):
     exif = {}
     imagem = Image.open(f"{caminho_arquivo}")
@@ -75,6 +78,9 @@ def exif_extrator(caminho_arquivo):
             if tag in ExifTags.TAGS:
                 nm_tag = ExifTags.TAGS[tag]
                 exif[nm_tag] = valor
+
+    if os.path.split(caminho_arquivo)[1] in excecoes:
+        print('alo alo é esse a')
 
     return imagem_tamanho, exif, caminho_arquivo
 
